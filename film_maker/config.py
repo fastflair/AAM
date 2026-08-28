@@ -193,7 +193,12 @@ FILM_CONFIG = {
     # and mid-take stitching stays gone). ~45s = ~1100 frames is a safe
     # ceiling for 24GB VRAM + 128GB RAM under WSL2; raise it on bigger
     # boxes, lower it if system RAM still pegs at 95%+ while rendering.
-    "scene_max_task_seconds": 45.0,
+    # None (default): NEVER split -- the whole scene is ONE model run and
+    # wan2gp's sliding windows handle all length internally, keeping the
+    # audio latent context CONTINUOUS across every window (a separate
+    # part-task restarts audio from scratch, which garbled speech).
+    # Set a number (e.g. 45) only if system RAM forces smaller tasks.
+    "scene_max_task_seconds": None,
     # ---- Dialogue fit + scene buttons ------------------------------------
     # Shot durations are FLOORED at render time to the performed speech
     # time (words at speech_words_per_second + a turn gap per line) plus

@@ -986,3 +986,18 @@ behavior. If any garble persists on very long multi-window parts, lower
 `scene_max_task_seconds` (e.g. 30) so each scene fits one model run
 with fewer windows — the pipeline already splits at cut boundaries, so
 no other change is needed.
+
+## v6.9 — whole scenes are ONE model run again (no part-splitting)
+Part-tasks restarted the audio latent context from scratch, garbling
+speech on _p2 parts; within a single model run wan2gp carries audio
+context continuously across all sliding windows. scene_max_task_seconds
+now defaults to None (never split); set a number only if RAM forces it.
+
+## v6.10 -- no invented dialogue; explicit ambient beds
+H3 fills unscripted audio time with invented speech: every shot prompt
+now declares the scripted lines are the ONLY dialogue (lips closed after
+the final line, ambience carries the rest), and every soundscape renders
+as an explicit 'continuous background audio bed' that must open with the
+location's never-stopping environment sounds (rig machinery + waves,
+surf + gulls, wind in branches, passing traffic, birdsong, lava roar)
+held under and after all dialogue.

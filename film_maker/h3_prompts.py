@@ -176,6 +176,13 @@ ANCHOR_IDENTITY = (
     "character's face, hairstyle, build, and costume must keep matching it "
     "exactly -- identity never drifts from that appearance.")
 
+NO_MORE_DIALOGUE = (
+    "The scripted lines above are the ONLY dialogue in this shot: once "
+    "the final scripted line ends, no one speaks again for the remainder "
+    "of the take -- every mouth stays closed, no murmurs, humming, or "
+    "background chatter -- and only the continuous background audio "
+    "carries the rest of the duration.")
+
 
 def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
                        style_medium: str, cfg: Dict,
@@ -217,6 +224,7 @@ def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
                              narrator_voice=narrator_voice)
     if dial:
         visual_bits.append(" ".join(dial))
+        visual_bits.append(NO_MORE_DIALOGUE)
     if motion:
         visual_bits.append(motion)
     visual = " ".join(b.strip().rstrip(".") + "." for b in visual_bits if b.strip())
@@ -230,7 +238,7 @@ def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
         "a natural ambient bed true to the setting"
 
     prompt = (f"{block}\n"
-              f"overall_soundscape: {sound}\n"
+              f"overall_soundscape: continuous background audio bed of the location, holding under and after all dialogue for the entire take -- {sound}\n"
               f"non_diegetic_music: N/A")
     return _enforce_word_budget(prompt,
                                 int(cfg.get("wgp_prompt_max_words", 350)))

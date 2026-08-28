@@ -472,7 +472,8 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
         # reintroduce mid-take stitching) with a warning.
         for si, sh in enumerate(shots):
             _ensure_dialogue_fit(sh, cfg, scene_last=(si == len(shots) - 1))
-        cap_secs = float(cfg.get("scene_max_task_seconds", 45.0))
+        _cap = cfg.get("scene_max_task_seconds")   # None/0 = never split
+        cap_secs = float(_cap) if _cap else float("inf")
         parts: List[List[Dict]] = [[]]
         acc = 0.0
         for sh in shots:
@@ -483,7 +484,7 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
                 acc = 0.0
             parts[-1].append(sh)
             acc += d
-            if d > cap_secs:
+            if cap_secs != float("inf") and d > cap_secs:
                 logger.warning("Scene %s shot %s: %.0fs single take "
                                "exceeds scene_max_task_seconds=%.0fs; "
                                "kept whole (watch RAM).",
