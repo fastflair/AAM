@@ -211,6 +211,13 @@ FILM_CONFIG = {
     # stock emotion button) and the OPEN QUESTION it leaves hanging --
     # chained so questions escalate by act and pay off at the finale.
     "hook_design": True,
+    # Voice reference mode: "lead" (default) sends ONE clean banked wav
+    # (the part's lead speaker) -- a concatenated multi-voice wav
+    # switches speakers mid-stream and reliably garbles H3's speech into
+    # gibberish. "combo" restores the old concatenation. If any garble
+    # persists, lower scene_max_task_seconds so every scene fits one
+    # model run with fewer windows.
+    "voice_ref_mode": "lead",
     "scene_button_seconds": 2.5,
     # ---- Sliding-window knobs (fork-dependent; verify once w/ dry run) ---
     # Window size in frames; empty/None = wgp_video_length_max_frames.

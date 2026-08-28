@@ -106,8 +106,6 @@ Planning phase: `pip install openai json-repair ftfy unidecode tiktoken`.
 Production adds the music generator's stack: `torch diffusers soundfile
 huggingface_hub pillow` + ffmpeg/ffprobe on PATH + your working Wan2GP env.
 
-WAn2GP install guide: https://github.com/fastflair/Wan2GP/blob/main/docs/INSTALLATION.md
-
 ## Long scenes and long takes
 
 Long **scenes** were always handled the filmic way: as sequences of ≤30s
@@ -976,3 +974,15 @@ entry hooks shape each scene's first window, exit hooks its held
 closing beat. Existing plans: clear the `screenplay` stage from
 planning_cache.json and re-run plan_film (resume=False after backing
 up), or keep the stock emotion buttons — both work.
+
+## v6.8 — fixed: gibberish speech on scene parts (combo voice refs)
+
+Multi-speaker parts sent a CONCATENATED multi-voice wav as the audio
+reference; a reference that switches speakers mid-stream reliably
+garbles H3's synthesized speech. Default is now `voice_ref_mode:
+"lead"` — one clean banked wav (the part's lead speaker) per task,
+paired with speaker frames as before. `"combo"` restores the old
+behavior. If any garble persists on very long multi-window parts, lower
+`scene_max_task_seconds` (e.g. 30) so each scene fits one model run
+with fewer windows — the pipeline already splits at cut boundaries, so
+no other change is needed.

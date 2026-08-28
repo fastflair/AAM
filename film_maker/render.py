@@ -681,9 +681,16 @@ def _attach_voice_refs(jobs: List[Dict], bank: Dict[str, str],
         speakers = [s for s in j["speakers"] if s and s in bank]
         if not speakers:
             continue
-        if len(speakers) == 1:
-            j["audio_ref"] = bank[speakers[0]]
-        else:
+        if len(speakers) == 1 or \
+                cfg.get("voice_ref_mode", "lead") == "lead":
+            # ONE clean voice per reference: a concatenated multi-voice
+            # wav switches speakers mid-stream, which reliably garbles
+            # H3's synthesized speech (gibberish words). The lead
+            # speaker's banked wav locks the most important voice; the
+            # rest stay coherent via in-scene context.
+            lead = j.get("lead_speaker") or speakers[0]
+            j["audio_ref"] = bank.get(lead) or bank[speakers[0]]
+        else:                                   # legacy "combo" mode
             combo = os.path.join(
                 voice_dir, f"combo_{j['shot_id']}.wav")
             j["audio_ref"] = _concat_wavs([bank[s] for s in speakers],
