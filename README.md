@@ -106,6 +106,8 @@ Planning phase: `pip install openai json-repair ftfy unidecode tiktoken`.
 Production adds the music generator's stack: `torch diffusers soundfile
 huggingface_hub pillow` + ffmpeg/ffprobe on PATH + your working Wan2GP env.
 
+WAn2GP install guide: https://github.com/fastflair/Wan2GP/blob/main/docs/INSTALLATION.md
+
 ## Long scenes and long takes
 
 Long **scenes** were always handled the filmic way: as sequences of ≤30s
