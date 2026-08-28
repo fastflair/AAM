@@ -194,6 +194,24 @@ FILM_CONFIG = {
     # ceiling for 24GB VRAM + 128GB RAM under WSL2; raise it on bigger
     # boxes, lower it if system RAM still pegs at 95%+ while rendering.
     "scene_max_task_seconds": 45.0,
+    # ---- Dialogue fit + scene buttons ------------------------------------
+    # Shot durations are FLOORED at render time to the performed speech
+    # time (words at speech_words_per_second + a turn gap per line) plus
+    # settle room, so no window ends mid-sentence. The last shot of each
+    # scene additionally holds a designed closing BEAT after the final
+    # line -- an emotion-matched button (held glance, thinning sound,
+    # decisive nod) written into the prompt -- so scenes land instead of
+    # cutting off.
+    "speech_words_per_second": 2.3,
+    "dialogue_turn_gap_seconds": 0.6,
+    "dialogue_settle_seconds": 1.2,
+    "scene_button": True,
+    # Hook architecture (planning): one LLM pass gives every scene an
+    # ENTRY hook (open mid-motion), an authored EXIT hook (replaces the
+    # stock emotion button) and the OPEN QUESTION it leaves hanging --
+    # chained so questions escalate by act and pay off at the finale.
+    "hook_design": True,
+    "scene_button_seconds": 2.5,
     # ---- Sliding-window knobs (fork-dependent; verify once w/ dry run) ---
     # Window size in frames; empty/None = wgp_video_length_max_frames.
     "wgp_windowed_window_frames": None,

@@ -900,5 +900,50 @@ def write_screenplay(story: Dict, graph: CharacterGraph, cfg: Dict) -> List[Dict
         if not report:
             logger.info("[behavior] Gesture audit clean: staged actions "
                         "stay varied across the film.")
+    if cfg.get("hook_design", True):
+        design_hooks(scenes, story, cfg)
     validate_voice_coverage(scenes, cfg)
     return scenes
+
+
+def design_hooks(scenes, story, cfg):
+    """Film-wide HOOK ARCHITECTURE (one LLM call): every scene gets an
+    ENTRY HOOK (arrive late -- open mid-motion on something already
+    wrong, wanted, or in progress), an EXIT HOOK (the concrete final
+    beat: a held glance, an interrupted action, a sound sting, a small
+    reveal, a question landing) and the OPEN QUESTION it leaves hanging.
+    Hooks must chain: each exit's question is picked up within 1-2
+    scenes, stakes escalate act by act, act-break scenes end on the
+    hardest cliffs, and the finale PAYS OFF the planted questions rather
+    than opening new ones. Render consumes these (entry hook shapes the
+    scene's first window; exit hook replaces the stock emotion button)."""
+    sc_lines = "\n".join(
+        f'{s["scene_id"]} (act {s.get("act","?")}, {s.get("emotion","")}): '
+        f'{str(s.get("summary",""))[:140]}' for s in scenes)
+    prompt = f"""Design the hook architecture for this film -- the chain of
+open questions that keeps a viewer unable to look away.
+Film: {story.get('logline','')}
+Scenes:
+{sc_lines}
+
+For EVERY scene return: "entry" -- how the scene opens ALREADY IN MOTION
+(<=18 words, concrete and stageable, no throat-clearing); "exit" -- the
+final held beat (<=20 words: a glance, gesture, sound, interruption, or
+micro-reveal that lands a specific emotion); "question" -- what the
+viewer is now dying to know (<=12 words). Chain them: questions planted
+early deepen mid-film and PAY OFF at the end; act breaks get the
+sharpest cliffs. Return ONLY raw JSON:
+{{"hooks": [{{"scene_id": 1, "entry": "...", "exit": "...",
+"question": "..."}}]}}"""
+    from .llm import safe_json_dict
+    data = safe_json_dict(get_llm(prompt, temperature=0.7, large=True))
+    got = 0
+    for h in (data or {}).get("hooks", []):
+        for s in scenes:
+            if s["scene_id"] == h.get("scene_id"):
+                s["entry_hook"] = clean_text(h.get("entry", ""))
+                s["exit_hook"] = clean_text(h.get("exit", ""))
+                s["open_question"] = clean_text(h.get("question", ""))
+                got += 1
+    logger.info("[screenplay] Hook architecture: %d/%d scenes hooked.",
+                got, len(scenes))

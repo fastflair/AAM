@@ -217,6 +217,75 @@ def _concat_wavs(paths: List[str], out_wav: str, max_s: float) -> Optional[str]:
 # ---------------------------------------------------------------------------
 # Job planning + voice-chaining waves
 # ---------------------------------------------------------------------------
+# End-of-scene buttons: a deliberate held beat after the final line, so
+# scenes end on an emotion instead of a mid-breath cut.
+_SCENE_BUTTONS = {
+    "fear": "a held breath and a slow look back toward what should not "
+            "be there, the soundscape thinning to a single detail",
+    "anger": "a long unblinking stare as a hand sets something down with "
+             "exaggerated care, one hard exhale through the nose",
+    "grief": "eyes resting on the absent one's belongings a beat too "
+             "long, the ambience sinking almost to silence",
+    "joy": "a smile finally allowed to win, held to the camera a beat "
+           "longer than polite",
+    "shame": "a glance away from the lens, hands stilling mid-fidget",
+    "love": "eye contact held half a beat past comfortable before one of "
+            "them looks down, hiding the smile",
+    "wonder": "a slow, silent stare upward, lips parted, the key sound "
+              "swelling gently",
+    "resolve": "a single decisive nod to no one, jaw set, before the cut",
+}
+
+
+def _speech_seconds(shot: Dict, cfg: Dict) -> float:
+    """Estimated PERFORMED time for a shot's dialogue: word count at a
+    spoken-performance rate plus a turn gap per line (breath, reaction,
+    delivery-cue pauses). H3 honors [/duration], so a window shorter than
+    this cuts the character off mid-sentence."""
+    lines = shot.get("lines") or []
+    if not lines:
+        return 0.0
+    wps = float(cfg.get("speech_words_per_second", 2.3))
+    gap = float(cfg.get("dialogue_turn_gap_seconds", 0.6))
+    words = sum(len(str(ln.get("text", "")).split()) for ln in lines)
+    return words / max(0.5, wps) + gap * len(lines)
+
+
+def _ensure_dialogue_fit(shot: Dict, cfg: Dict, scene_last: bool) -> None:
+    """Floor a shot's duration to (speech time + settle room), plus the
+    scene-button hold on the scene's final shot -- dialogue always
+    finishes, with air after it."""
+    need = _speech_seconds(shot, cfg)
+    if need <= 0 and not scene_last:
+        return
+    need += float(cfg.get("dialogue_settle_seconds", 1.2))
+    if scene_last and cfg.get("scene_button", True):
+        need += float(cfg.get("scene_button_seconds", 2.5))
+    cur = float(shot.get("duration", 0))
+    if need > cur + 0.05:
+        shot["duration"] = round(need, 1)
+        logger.info("[render] Shot %s: duration %.1fs -> %.1fs so the "
+                    "dialogue finishes%s.", shot.get("shot_id"), cur,
+                    shot["duration"],
+                    " (+ scene button)" if scene_last else "")
+
+
+def _scene_button_text(scene: Dict) -> str:
+    # Authored exit hook (hook architecture) beats the stock button.
+    if scene.get("exit_hook"):
+        return (f" After the final line, the take holds for a deliberate "
+                f"closing beat -- {scene['exit_hook']} -- before it "
+                f"ends; no one speaks during this hold.")
+    from .behavior_grammar import _resolve_emotions
+    keys = _resolve_emotions([scene.get("emotion", ""),
+                             scene.get("summary", "")[:120]])
+    hook = _SCENE_BUTTONS.get(keys[0] if keys else "resolve",
+                              _SCENE_BUTTONS["resolve"])
+    return (f" After the final line, the take holds for a deliberate "
+            f"closing beat -- {hook} -- before it ends; no one speaks "
+            f"during this hold.")
+
+
 def _fmt_secs(seconds: float) -> str:
     s = round(float(seconds), 1)
     return f"{int(s)}s" if abs(s - int(s)) < 0.05 else f"{s}s"
@@ -327,6 +396,11 @@ def _scene_window_lines(scene: Dict, story: Dict, style_medium: str,
             flat = " ".join(p.split())
             if not lines:                       # scene's very first window
                 cmd = f"[/duration={_fmt_secs(win_secs)}]"
+                if scene.get("entry_hook"):
+                    flat += (" The take opens already in motion, no "
+                             "settling-in: " +
+                             " ".join(str(scene["entry_hook"]).split())
+                             + ".")
                 if identity_lock:
                     flat = " ".join(identity_lock.split()) + " " + flat
             elif w == 0:                        # a cut to a new shot
@@ -396,6 +470,8 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
         # cuts lose nothing and mid-take stitching stays gone. A single
         # shot longer than the cap stays whole (splitting it WOULD
         # reintroduce mid-take stitching) with a warning.
+        for si, sh in enumerate(shots):
+            _ensure_dialogue_fit(sh, cfg, scene_last=(si == len(shots) - 1))
         cap_secs = float(cfg.get("scene_max_task_seconds", 45.0))
         parts: List[List[Dict]] = [[]]
         acc = 0.0
@@ -432,6 +508,9 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
             sub_scene["shots"] = part_shots
             lines = _scene_window_lines(sub_scene, story, style_medium,
                                         cfg, identity_lock=identity_lock)
+            if pi == len(parts) and cfg.get("scene_button", True) and lines:
+                lines[-1] = (lines[-1].rstrip()
+                             + _scene_button_text(scene))
             prompt = str(cfg.get("wgp_windowed_prompt_separator",
                                  "\n")).join(lines)
             # WanGP parses braces in prompts as template variables (its

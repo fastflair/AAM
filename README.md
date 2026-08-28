@@ -940,3 +940,37 @@ instead of silently invalidating the cache and re-planning over your
 finished film (previously a reworded idea string did exactly that).
 Re-plan deliberately with `resume=False`, or start a new film with a
 new `project_name`.
+
+## v6.6 — dialogue always finishes; scenes end on a designed button
+
+Characters were being cut off mid-sentence: authored shot durations
+could be shorter than the PERFORMED speech time, and H3 honors
+[/duration] exactly. Two render-time fixes (no re-planning needed):
+
+* **Dialogue-time floor** — every shot's duration is floored at words /
+  `speech_words_per_second` (2.3) + a `dialogue_turn_gap_seconds` (0.6)
+  per line + `dialogue_settle_seconds` (1.2) of air after the last
+  line. Raised durations flow into the window [/duration] commands,
+  part-splitting, and conform automatically, and are logged.
+* **Scene buttons** — the last shot of every scene holds an extra
+  `scene_button_seconds` (2.5) after its final line, and the scene's
+  final window prompt gains an emotion-matched closing beat ("a held
+  breath and a slow look back toward what should not be there, the
+  soundscape thinning to a single detail" for dread; matched hooks for
+  anger/grief/joy/shame/love/wonder/resolve) with an explicit no-speech
+  hold — so scenes land on a deliberate emotion instead of a hard cut.
+  Disable with `scene_button: False`.
+
+## v6.7 — hook architecture: designed hooks THROUGHOUT the story
+
+One planning pass (`design_hooks`, `hook_design: True`) now gives every
+scene an ENTRY hook (arrive late: open mid-motion on something already
+wrong or wanted), an authored EXIT hook (the concrete final beat — it
+replaces the stock emotion button), and the OPEN QUESTION it leaves
+hanging — chained so each question is picked up within 1-2 scenes,
+stakes escalate act by act, act breaks get the sharpest cliffs, and the
+finale pays the questions off. Render consumes them automatically:
+entry hooks shape each scene's first window, exit hooks its held
+closing beat. Existing plans: clear the `screenplay` stage from
+planning_cache.json and re-run plan_film (resume=False after backing
+up), or keep the stock emotion buttons — both work.
