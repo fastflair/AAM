@@ -223,7 +223,7 @@ FILM_CONFIG = {
     # persists, lower scene_max_task_seconds so every scene fits one
     # model run with fewer windows.
     "voice_ref_mode": "lead",
-    "scene_button_seconds": 2.5,
+    "scene_button_seconds": 3.5,
     # ---- Sliding-window knobs (fork-dependent; verify once w/ dry run) ---
     # Window size in frames; empty/None = wgp_video_length_max_frames.
     "wgp_windowed_window_frames": None,

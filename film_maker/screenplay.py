@@ -318,6 +318,13 @@ SHOT PLAN (honor each shot's duration and word budget exactly):
 {shot_specs}
 
 RULES:
+- SCENE LANDING (critical): the LAST shot of the scene must NOT end on
+  its final spoken line -- author a wordless AFTERMATH into that shot's
+  action: 2-4 seconds of what happens AFTER the words that dramatizes
+  their impact (a hand finishing or abandoning its gesture; a cut of
+  attention to the object whose meaning just changed; the environment
+  answering -- rain hardening, a counter still climbing, a light going
+  steady). The words land, then the image proves them.
 - ACTION: one concrete continuous piece of staging per shot -- movement,
   business with objects, physical behavior that dramatizes the beat. Never
   "stands and talks" unless stillness IS the drama; give hands and bodies

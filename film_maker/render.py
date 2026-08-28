@@ -260,7 +260,7 @@ def _ensure_dialogue_fit(shot: Dict, cfg: Dict, scene_last: bool) -> None:
         return
     need += float(cfg.get("dialogue_settle_seconds", 1.2))
     if scene_last and cfg.get("scene_button", True):
-        need += float(cfg.get("scene_button_seconds", 2.5))
+        need += float(cfg.get("scene_button_seconds", 3.5))
     cur = float(shot.get("duration", 0))
     if need > cur + 0.05:
         shot["duration"] = round(need, 1)
@@ -273,9 +273,11 @@ def _ensure_dialogue_fit(shot: Dict, cfg: Dict, scene_last: bool) -> None:
 def _scene_button_text(scene: Dict) -> str:
     # Authored exit hook (hook architecture) beats the stock button.
     if scene.get("exit_hook"):
-        return (f" After the final line, the take holds for a deliberate "
-                f"closing beat -- {scene['exit_hook']} -- before it "
-                f"ends; no one speaks during this hold.")
+        return (f" The scene does not end on its words: after the final "
+                f"line the take CONTINUES wordlessly for several seconds "
+                f"of aftermath that shows the line's impact -- "
+                f"{scene['exit_hook']} -- action and camera still alive, "
+                f"the meaning landing on screen; no one speaks again.")
     from .behavior_grammar import _resolve_emotions
     keys = _resolve_emotions([scene.get("emotion", ""),
                              scene.get("summary", "")[:120]])
