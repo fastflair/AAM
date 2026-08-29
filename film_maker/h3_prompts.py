@@ -230,8 +230,14 @@ def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
     visual = " ".join(b.strip().rstrip(".") + "." for b in visual_bits if b.strip())
     visual = _tag_speakers_in_visual(visual, shot)
 
-    header = f"Shot 1: {style_medium}, cinematic. A {scale} at {angle}."
-    block = f"[{header} {visual}]"
+    # Official H3 structure (MiniMax h3-prompt-writing skill): the field
+    # label, then "[Shot 1]" as a standalone marker, then prose -- style
+    # first, framing as a sentence. Everything-inside-brackets is
+    # nonstandard and measurably weakens instruction-following (invented
+    # dialogue, ignored lips-closed clauses).
+    block = (f"integrated_multimodal_description: [Shot 1] "
+             f"{style_medium}, cinematic, a {scale} at {angle} frames "
+             f"the scene. {visual}")
 
     # --- soundscape ---------------------------------------------------------
     sound = clean_text(shot.get("soundscape", "")) or \
