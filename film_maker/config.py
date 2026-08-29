@@ -264,7 +264,13 @@ FILM_CONFIG = {
     "wgp_video_length_max_frames": 362,
     "wgp_audio_ref_min_seconds": 2.0,
     "wgp_audio_ref_max_seconds": 15.0,
-    "wgp_prompt_max_words": 350,
+    # Word ceiling per shot prompt (each shot line is its own window
+    # prompt). NOT an H3 requirement -- the text encoder handles far
+    # longer -- just a guard against runaway prompts. 350 (the old cap)
+    # now trims real content: v6 prompts carry identity locks, dialogue
+    # closes, cast-silence, and aftermath direction, and the trimmer cuts
+    # from the tail where motion + scene-button text live.
+    "wgp_prompt_max_words": 650,
     "wgp_extra_cli_args": [],   # extra raw flags, appended AFTER the ones below
     # ---- mmgp memory profile tuning ---------------------------------------
     # These build the --profile / --perc-reserved-mem-max flags for you (set

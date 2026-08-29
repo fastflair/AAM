@@ -225,6 +225,19 @@ def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
     if dial:
         visual_bits.append(" ".join(dial))
         visual_bits.append(NO_MORE_DIALOGUE)
+        spk = {(l.get("speaker") or "").strip().upper()
+               for l in dial_shot.get("lines", []) if l.get("speaker")}
+        if spk == {"NARRATOR"}:
+            names = [str(n) for n in (scene.get("characters") or []) if n]
+            if names:
+                who = ", ".join(names)
+                verb = "is" if len(names) == 1 else "are"
+                visual_bits.append(
+                    f"{who} {verb} on screen but NEVER speaks, mouths "
+                    f"words, or moves their lips at any moment in this "
+                    f"shot -- mouth closed, jaw still, breathing quietly; "
+                    f"the only voice heard is the narrator's, entirely "
+                    f"off-screen.")
     if motion:
         visual_bits.append(motion)
     visual = " ".join(b.strip().rstrip(".") + "." for b in visual_bits if b.strip())

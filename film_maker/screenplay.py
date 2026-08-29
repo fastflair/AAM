@@ -318,6 +318,13 @@ SHOT PLAN (honor each shot's duration and word budget exactly):
 {shot_specs}
 
 RULES:
+- NARRATION STAGING: for any shot where ONLY the NARRATOR speaks, stage
+  the visuals AWAY from talking-ready faces -- favor hands, objects,
+  environment, silhouettes, backs, wide B-roll of the setting -- or, if
+  a face is framed, give the mouth a visible reason to be closed and
+  busy (drinking, jaw set, biting a pen, wind-squint). Never put a
+  character in a face-forward close-up during pure narration; the
+  narrator's voice floats over a world that is not talking.
 - SCENE LANDING (critical): the LAST shot of the scene must NOT end on
   its final spoken line -- author a wordless AFTERMATH into that shot's
   action: 2-4 seconds of what happens AFTER the words that dramatizes
