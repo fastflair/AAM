@@ -360,65 +360,20 @@ def _scene_window_lines(scene: Dict, story: Dict, style_medium: str,
     lines: List[str] = []
     for sh in scene.get("shots", []):
         dur = float(sh.get("duration", cfg.get("min_shot_seconds", 5)))
-        frames = max(1, int(round(dur * fps)))
-        n_win = 1 if frames <= single_cap else \
-            estimate_window_count(frames, cfg)
-        phases = sh.get("chain_phases") or []
-        shot_lines = sh.get("lines") or []
-        placed = set()
-        win_secs = dur / n_win
-        for w in range(n_win):
-            if n_win > 1 and phases:
-                pi = min(len(phases) - 1, (w * len(phases)) // n_win)
-                ph = phases[pi]
-                idxs = [int(j) for j in (ph.get("line_indices") or [])
-                        if isinstance(j, (int, float))
-                        and 0 <= int(j) < len(shot_lines)
-                        and int(j) not in placed]
-                placed.update(idxs)
-                ov = {"action": ph.get("action", sh.get("action", "")),
-                      "motion": ph.get("motion", sh.get("motion", "")),
-                      "lines": [shot_lines[j] for j in idxs]}
-                if w > 0:
-                    ov["action"] = (str(ov["action"]) +
-                                    " (the same unbroken take continuing: "
-                                    "advance the action forward, never "
-                                    "restart or repeat)")
-            elif n_win > 1:
-                ov = {"lines": shot_lines if w == 0 else []}
-                if w > 0:
-                    ov["action"] = (str(sh.get("action", "")) +
-                                    f" (part {w + 1} of {n_win} of the "
-                                    f"same unbroken take: continue "
-                                    f"forward, never restart)")
-            else:
-                ov = None
-            p = assemble_h3_prompt(sh, scene, story, style_medium, cfg,
-                                   chained=False, overrides=ov)
-            flat = " ".join(p.split())
-            if not lines:                       # scene's very first window
-                cmd = f"[/duration={_fmt_secs(win_secs)}]"
-                if scene.get("entry_hook"):
-                    flat += (" The take opens already in motion, no "
-                             "settling-in: " +
-                             " ".join(str(scene["entry_hook"]).split())
-                             + ".")
-                if identity_lock:
-                    flat = " ".join(identity_lock.split()) + " " + flat
-            elif w == 0:                        # a cut to a new shot
-                cmd = f"[/duration={_fmt_secs(win_secs)},/new_shot]"
-            else:                               # long-take continuation
-                cmd = (f"[/duration={_fmt_secs(win_secs)},"
-                       f"/overlap={overlap}]")
-            lines.append(f"{cmd} {flat}")
-        if n_win > 1 and phases:
-            missing = [j for j in range(len(shot_lines))
-                       if j not in placed]
-            if missing:
-                logger.warning("[render] Scene %s shot %s: %d line(s) "
-                               "unplaced by phases.",
-                               scene.get("scene_id"), sh.get("shot_id"),
-                               len(missing))
+        p = assemble_h3_prompt(sh, scene, story, style_medium, cfg,
+                               chained=False)
+        flat = " ".join(p.split())
+        if not lines:                       # scene's very first shot
+            cmd = f"[/duration={_fmt_secs(dur)}]"
+            if scene.get("entry_hook"):
+                flat += (" The take opens already in motion, no "
+                         "settling-in: " +
+                         " ".join(str(scene["entry_hook"]).split()) + ".")
+            if identity_lock:
+                flat = " ".join(identity_lock.split()) + " " + flat
+        else:                               # a hard cut to a new shot
+            cmd = f"[/duration={_fmt_secs(dur)},/new_shot]"
+        lines.append(f"{cmd} {flat}")
     return lines
 
 
