@@ -161,3 +161,42 @@ def generate_stills(scenes: List[Dict], story: Dict, style_bible: Dict,
         del pipe
         _free_cuda()
         _report_vram("[stills] Z-Image released.")
+
+
+def generate_character_refs(story, style_bible, out_dir, cfg):
+    """use_reference_character_images: ONE portrait per character from
+    Z-Image (prompted by their visual_lock), saved to
+    <out_dir>/char_<Name>.jpg. Idempotent: an existing file is kept, so
+    swapping a portrait on disk and re-rendering changes the character
+    everywhere. These become persistent Ref2VA references (the fork keeps
+    reference memories across every sliding window), replacing the long
+    text descriptions in animation prompts."""
+    import os, re as _re
+    os.makedirs(out_dir, exist_ok=True)
+    todo = []
+    for c in (story.get("characters") or []):
+        name = c.get("name", "")
+        if not name:
+            continue
+        path = os.path.join(out_dir,
+                            f"char_{_re.sub(r'[^A-Za-z0-9_-]', '_', name)}.jpg")
+        c["ref_image"] = path
+        if not os.path.exists(path):
+            todo.append((c, path))
+    if not todo:
+        return
+    pipe = _load_zimage(cfg)
+    medium = (style_bible or {}).get("medium", "cinematic")
+    try:
+        for c, path in todo:
+            prompt = (f"Character reference portrait, {medium}. "
+                      f"{c.get('visual_lock') or c.get('screen_tag','')} "
+                      f"Three-quarter view, head to mid-thigh, neutral "
+                      f"stance, face clearly visible, even soft light, "
+                      f"plain neutral background. No text, no watermark.")
+            img = _generate(pipe, prompt, cfg,
+                            seed=abs(hash(c.get('name',''))) % (2**31))
+            (img[0] if isinstance(img, list) else img).save(path)
+            logger.info("[images] Character reference: %s", path)
+    finally:
+        _free_cuda()

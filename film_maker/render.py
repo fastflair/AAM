@@ -448,8 +448,21 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
                                sid, sh.get("shot_id"), d, cap_secs)
         multi = len(parts) > 1
         scene["clip_parts"] = []
-        identity_lock = "" if use_stills else _identity_lock_block(
-            scene, story, cfg, wardrobe=wardrobe, locations=locations)
+        char_refs = []
+        if cfg.get("use_reference_character_images", False):
+            for c in (story.get("characters") or []):
+                if c.get("name") in (scene.get("characters") or []) \
+                        and c.get("ref_image") \
+                        and os.path.exists(c["ref_image"]):
+                    char_refs.append(os.path.abspath(c["ref_image"]))
+        if char_refs:
+            # Portraits carry identity; prompts focus on ACTION + SCENE.
+            identity_lock = ("Each character's exact appearance is "
+                            "defined by their reference image and never "
+                            "drifts from it.")
+        else:
+            identity_lock = "" if use_stills else _identity_lock_block(
+                scene, story, cfg, wardrobe=wardrobe, locations=locations)
         for pi, part_shots in enumerate(parts, 1):
             part_path = (os.path.join(clips_dir,
                                       f"scene_{sid:03d}_p{pi}.mp4")
@@ -492,6 +505,7 @@ def build_scene_jobs(scenes: List[Dict], story: Dict, style_bible: Dict,
                 # later parts open on a CUT, so the still rides along as
                 # an identity reference only.
                 "_start_image_ok": (pi == 1),
+                "image_refs_extra": list(char_refs),
                 "audio_ref": None,          # filled per wave
                 "num_frames": render_frames,
                 "n_windows": len(lines),

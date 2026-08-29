@@ -157,6 +157,16 @@ FILM_CONFIG = {
     # reference. Cross-scene continuity stays textual (the physical-state
     # ledger writes carried state into the next scene's still prompt).
     "use_reference_stills": True,
+    # OPT-IN: fixed character identity via Z-Image PORTRAITS. One
+    # portrait per character (from their visual_lock) is generated to
+    # stills/characters/char_<Name>.jpg and attached to every scene task
+    # as a persistent Ref2VA reference (the fork keeps reference
+    # memories across all sliding windows). Animation prompts then DROP
+    # the long character descriptions and focus on action + scene.
+    # Idempotent + editable: swap a portrait file on disk (or delete it
+    # to regenerate) and re-render to change that character everywhere.
+    # Combines with voice banking for consistent look + voice.
+    "use_reference_character_images": False,
     # False = skip Z-Image ENTIRELY: no stills stage, no image
     # conditioning. Identity then rides in the prompt -- a detailed
     # identity-lock block (faces, hair, build, wardrobe, location look)
@@ -240,7 +250,14 @@ FILM_CONFIG = {
     # Extra task fields switching the fork into one-prompt-line-per-window
     # mode ("Each Line Will be used for a new Sliding Window"); adjust
     # after the one-time dry-run verification if named differently.
-    "wgp_windowed_extra_task_fields": {"multi_prompts_gen_type": 1},
+    "wgp_windowed_extra_task_fields": {
+        "multi_prompts_gen_type": 1,
+        # Prompt-level silencing: stops H3 hallucinating filler speech /
+        # babble during non-speech intervals of long windowed takes.
+        # Fork-dependent -- verify once with wgp_dry_run=True; unknown
+        # fields are ignored by wgp's settings loader.
+        "auto_silence_nonspeech": True,
+    },
     # Auto-planned oners per film: the pacing engine promotes up to this many
     # low-tension scenes (where the register's craft favors a held take) to a
     # single continuous long take. You can also just edit any shot's

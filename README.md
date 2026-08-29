@@ -1001,3 +1001,58 @@ as an explicit 'continuous background audio bed' that must open with the
 location's never-stopping environment sounds (rig machinery + waves,
 surf + gulls, wind in branches, passing traffic, birdsong, lava roar)
 held under and after all dialogue.
+
+## v6.10-v6.16 — dialogue discipline, canonical prompts, character images
+
+**Prompt structure (v6.11)** now follows the official MiniMax
+h3-prompt-writing skill exactly: `integrated_multimodal_description:
+[Shot 1] <style>, cinematic, a N-second continuous single take, a
+<scale> at <angle> frames the scene. <action + dialogue + motion>` with
+`overall_soundscape:` and `non_diegetic_music:` fields. One prompt line
+per SHOT — wgp's sliding-window engine windows long shots internally
+with continuous audio context (never per-window prompts, which caused
+invented/garbled speech in continuation windows).
+
+**Dialogue discipline (v6.10, v6.12, v6.14, v6.15)** — layered
+safeguards against H3's repeat/hallucinate-speech failure modes:
+* Each line is declared spoken exactly ONCE, early, never repeated or
+  echoed; "all speech completes naturally within the take with precise
+  lip synchronization"; after the final line no one speaks again.
+* Narrator-only shots with characters present get a NAMED cast-silence
+  declaration ("Maya is on screen but NEVER speaks...") and a planning
+  rule stages pure narration away from talking-ready faces (B-roll,
+  hands, environment, occupied mouths).
+* Every soundscape renders as a "continuous background audio bed of the
+  location" (ambient-bed rule: rig machinery + waves, surf + gulls,
+  wind in branches, traffic, birdsong...) owning all non-speech time.
+* Task field `auto_silence_nonspeech: true` (in
+  `wgp_windowed_extra_task_fields`) suppresses filler babble.
+* Authoring rules: 1-2 short sentences per ~5s of shot; dialogue exists
+  in exactly one field, never restated in action/continuity text.
+* `wgp_prompt_max_words` raised 350 -> 650 (v6.13) so the trimmer no
+  longer eats motion/aftermath text; dialogue + lips clauses protected.
+
+**Scene endings** — durations floored to performed speech time
+(`speech_words_per_second` 2.3, turn gap 0.6s, settle 1.2s); the last
+shot holds `scene_button_seconds` (3.5) of wordless AFTERMATH after the
+final line (authored exit hook or emotion-matched button), and the
+SCENE LANDING rule writes post-line aftermath into the shot itself.
+
+**`use_reference_character_images` (v6.16, default False)** — fixed
+character identity via Z-Image PORTRAITS: one per character (from
+visual_lock) at `stills/characters/char_<Name>.jpg`, attached to every
+scene task as persistent Ref2VA references; animation prompts then DROP
+the long character descriptions and focus on action + scene. Swap or
+delete a portrait on disk and re-render to recast a character
+everywhere; combines with voice banking for consistent look + voice.
+
+**Key config quick-reference:** `use_reference_stills` (True: one
+Z-Image still per scene; False: text identity locks),
+`scene_start_image` (pin frame 1 to the still),
+`use_reference_character_images` (portrait refs, opt-in),
+`scene_max_task_seconds` (None: never split scenes),
+`voice_ref_mode` ("lead": one clean wav per task), `scene_button` /
+`scene_button_seconds`, `hook_design`, `behavior_grammar`,
+`speech_words_per_second`, `wgp_prompt_max_words`, and the fork-
+dependent `wgp_windowed_*` / `wgp_scene_start_image_*` fields (verify
+once with `wgp_dry_run=True`).

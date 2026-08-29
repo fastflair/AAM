@@ -177,11 +177,14 @@ ANCHOR_IDENTITY = (
     "exactly -- identity never drifts from that appearance.")
 
 NO_MORE_DIALOGUE = (
-    "The scripted lines above are the ONLY dialogue in this shot: once "
-    "the final scripted line ends, no one speaks again for the remainder "
-    "of the take -- every mouth stays closed, no murmurs, humming, or "
-    "background chatter -- and only the continuous background audio "
-    "carries the rest of the duration.")
+    "The scripted lines above are the ONLY dialogue in this take, and "
+    "each line is spoken exactly ONCE, early in the take, never "
+    "repeated, restated, or echoed at any later point. All speech "
+    "completes naturally within the take with precise lip "
+    "synchronization; once the final scripted line ends, no one speaks "
+    "again for the remainder of the duration -- every mouth stays "
+    "closed, no murmurs, humming, or background chatter -- and only the "
+    "continuous background audio carries the rest of the take.")
 
 
 def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
@@ -248,9 +251,12 @@ def assemble_h3_prompt(shot: Dict, scene: Dict, story: Dict,
     # first, framing as a sentence. Everything-inside-brackets is
     # nonstandard and measurably weakens instruction-following (invented
     # dialogue, ignored lips-closed clauses).
+    dur_s = float(shot.get("duration", 0) or 0)
+    dur_bit = (f"a {dur_s:.0f}-second continuous single take, "
+               if dur_s >= 1 else "")
     block = (f"integrated_multimodal_description: [Shot 1] "
-             f"{style_medium}, cinematic, a {scale} at {angle} frames "
-             f"the scene. {visual}")
+             f"{style_medium}, cinematic, {dur_bit}a {scale} at {angle} "
+             f"frames the scene. {visual}")
 
     # --- soundscape ---------------------------------------------------------
     sound = clean_text(shot.get("soundscape", "")) or \

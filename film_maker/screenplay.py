@@ -318,6 +318,11 @@ SHOT PLAN (honor each shot's duration and word budget exactly):
 {shot_specs}
 
 RULES:
+- DIALOGUE BUDGET (hard): spoken lines stay CONCISE -- at most 1-2
+  short sentences per ~5 seconds of shot duration; H3 loops or spills
+  text when audio outruns the shot. Never quote, restate, or echo a
+  spoken line inside ACTION text, continuity notes, or any other field:
+  dialogue exists in exactly ONE place, its line entry, spoken once.
 - NARRATION STAGING: for any shot where ONLY the NARRATOR speaks, stage
   the visuals AWAY from talking-ready faces -- favor hands, objects,
   environment, silhouettes, backs, wide B-roll of the setting -- or, if

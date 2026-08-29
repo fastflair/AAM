@@ -534,6 +534,12 @@ def produce_film(plan_path: Optional[str] = None, cfg: Dict = None,
     #    -- its opening frame / persistent identity reference. Skipped
     #    entirely with use_reference_stills=False (text-only identity
     #    locks carry consistency instead).
+    if cfg.get("use_reference_character_images", False):
+        from .images import generate_character_refs
+        generate_character_refs(plan["story"], plan.get("style_bible"),
+                                os.path.join(dirs["images"], "characters"),
+                                cfg)
+        _save_plan(plan, plan_path)   # persist ref_image paths
     if cfg.get("use_reference_stills", True):
         openers = {sc["shots"][0]["shot_id"] for sc in scenes
                    if sc.get("shots")}
